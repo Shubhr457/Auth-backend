@@ -27,13 +27,30 @@ A production-ready Node.js REST API for user authentication built from scratch.
 
 ## Project Structure
 
-- `src/config/` - Database connection
-- `src/controllers/` - Route handlers for authentication
-- `src/middlewares/` - Auth protection, rate limiting, and input validation
-- `src/models/` - Mongoose schemas (`User` and `Token`)
-- `src/routes/` - Express routers
-- `src/utils/` - Helpers for JWT, Crypto, and Emails
-- `tests/` - Jest test suite using an in-memory MongoDB
+This project follows a **modular monolithic architecture** where features are organized into self-contained modules:
+
+```
+src/
+├── config/         - Database configuration
+├── helpers/        - Shared utilities (JWT, crypto, email)
+├── interfaces/     - Shared type definitions and constants
+├── middlewares/    - Auth protection, rate limiting, validation
+├── models/         - Mongoose schemas (User, Token)
+└── modules/
+    └── auth/       - Authentication module
+        ├── controllers/  - Individual endpoint handlers
+        ├── routes/       - Route definitions
+        ├── services/     - Business logic layer
+        └── validators/   - Input validation rules
+```
+
+**Benefits of this architecture:**
+- **Modularity**: Each feature is self-contained and easy to maintain
+- **Scalability**: New modules can be added independently
+- **Separation of Concerns**: Controllers, services, and validators are clearly separated
+- **Testability**: Services can be tested independently of HTTP layer
+
+`tests/` - Comprehensive Jest test suite using in-memory MongoDB
 
 ## Getting Started
 
@@ -69,14 +86,6 @@ A production-ready Node.js REST API for user authentication built from scratch.
   ```bash
   npm start
   ```
-
-### Running Tests
-
-The test suite uses `mongodb-memory-server` so you do not need a running MongoDB instance to run the tests.
-
-```bash
-npm test
-```
 
 ## API Documentation
 

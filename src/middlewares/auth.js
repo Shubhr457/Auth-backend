@@ -1,4 +1,4 @@
-const { verifyAccessToken } = require('../utils/jwt');
+const { verifyAccessToken } = require('../helpers/jwt');
 const User = require('../models/User');
 
 /**
