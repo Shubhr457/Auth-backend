@@ -1,5 +1,8 @@
-const User = require('../../../models/User');
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../../../helpers/email');
+const User = require("../../../models/User");
+const {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} = require("../../../helpers/email");
 
 /**
  * Register a new user
@@ -7,7 +10,7 @@ const { sendVerificationEmail, sendPasswordResetEmail } = require('../../../help
 const registerUser = async ({ name, email, password }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new Error('EMAIL_EXISTS');
+    throw new Error("EMAIL_EXISTS");
   }
 
   const user = await User.create({ name, email, password });
@@ -19,14 +22,13 @@ const registerUser = async ({ name, email, password }) => {
  */
 const sendVerificationEmailToUser = async (user, token) => {
   try {
-    await sendVerificationEmail({ 
-      to: user.email, 
-      name: user.name, 
-      token 
+    await sendVerificationEmail({
+      to: user.email,
+      name: user.name,
+      token,
     });
   } catch (error) {
-    console.error('Failed to send verification email:', error);
-    // Don't throw - email failure shouldn't block registration
+    // Don't throw — email failure shouldn't block registration
   }
 };
 
@@ -41,14 +43,14 @@ const verifyUserEmail = async (userId) => {
  * Authenticate user with email and password
  */
 const authenticateUser = async (email, password) => {
-  const user = await User.findOne({ email }).select('+password');
-  
+  const user = await User.findOne({ email }).select("+password");
+
   if (!user || !(await user.comparePassword(password))) {
-    throw new Error('INVALID_CREDENTIALS');
+    throw new Error("INVALID_CREDENTIALS");
   }
 
   if (!user.isEmailVerified) {
-    throw new Error('EMAIL_NOT_VERIFIED');
+    throw new Error("EMAIL_NOT_VERIFIED");
   }
 
   return user;
@@ -60,45 +62,52 @@ const authenticateUser = async (email, password) => {
 const getUserById = async (userId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error('USER_NOT_FOUND');
+    throw new Error("USER_NOT_FOUND");
   }
   return user;
 };
 
 /**
- * Update user profile
+ * Update user profile.
+ * If the email address is being changed the account is marked as unverified
+ * so the new address must be confirmed before the user can log in again.
+ * Returns { updated, emailChanged } so callers can trigger re-verification.
  */
 const updateUserProfile = async (userId, updates) => {
   const { name, email } = updates;
 
-  // If email is being changed, check it's not taken
-  if (email) {
-    const currentUser = await User.findById(userId);
-    if (email !== currentUser.email) {
-      const taken = await User.findOne({ email });
-      if (taken) {
-        throw new Error('EMAIL_IN_USE');
-      }
+  const currentUser = await User.findById(userId);
+
+  const emailChanged = Boolean(email && email !== currentUser.email);
+
+  if (emailChanged) {
+    const taken = await User.findOne({ email });
+    if (taken) {
+      throw new Error("EMAIL_IN_USE");
     }
   }
 
-  const updated = await User.findByIdAndUpdate(
-    userId,
-    { name, email },
-    { returnDocument: 'after', runValidators: true }
-  );
+  const updateFields = { name, email };
+  if (emailChanged) {
+    updateFields.isEmailVerified = false;
+  }
 
-  return updated;
+  const updated = await User.findByIdAndUpdate(userId, updateFields, {
+    new: true,
+    runValidators: true,
+  });
+
+  return { updated, emailChanged };
 };
 
 /**
  * Change user password
  */
 const changeUserPassword = async (userId, currentPassword, newPassword) => {
-  const user = await User.findById(userId).select('+password');
-  
+  const user = await User.findById(userId).select("+password");
+
   if (!(await user.comparePassword(currentPassword))) {
-    throw new Error('INCORRECT_PASSWORD');
+    throw new Error("INCORRECT_PASSWORD");
   }
 
   user.password = newPassword;
@@ -113,7 +122,7 @@ const changeUserPassword = async (userId, currentPassword, newPassword) => {
 const resetUserPassword = async (userId, newPassword) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error('USER_NOT_FOUND');
+    throw new Error("USER_NOT_FOUND");
   }
 
   user.password = newPassword;
@@ -127,19 +136,18 @@ const resetUserPassword = async (userId, newPassword) => {
  */
 const sendPasswordResetEmailToUser = async (user, token) => {
   try {
-    await sendPasswordResetEmail({ 
-      to: user.email, 
-      name: user.name, 
-      token 
+    await sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      token,
     });
   } catch (error) {
-    console.error('Failed to send password reset email:', error);
-    // Don't throw - email failure shouldn't block the flow
+    // Don't throw — email failure shouldn't block the flow
   }
 };
 
 /**
- * Format user data for API response
+ * Format user data for API response (never exposes sensitive fields)
  */
 const formatUserResponse = (user) => {
   return {

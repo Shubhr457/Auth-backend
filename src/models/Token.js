@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const tokenSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   },
   token: {
@@ -13,20 +13,16 @@ const tokenSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['refresh', 'emailVerification', 'passwordReset'],
+    enum: ["refresh", "emailVerification", "passwordReset"],
     required: true,
   },
   expiresAt: {
     type: Date,
     required: true,
   },
-  used: {
-    type: Boolean,
-    default: false,
-  },
 });
 
-// Auto-remove expired or used tokens via TTL index
+// Auto-remove expired tokens via TTL index
 tokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-module.exports = mongoose.model('Token', tokenSchema);
+module.exports = mongoose.model("Token", tokenSchema);

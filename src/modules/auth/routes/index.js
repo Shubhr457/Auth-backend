@@ -1,82 +1,71 @@
-const { Router } = require('express');
+const { Router } = require("express");
 const router = Router();
 
-const controllers = require('../controllers');
-const { protect } = require('../../../middlewares/auth');
-const { authLimiter } = require('../../../middlewares/rateLimiter');
-const validateDto = require('../../../middlewares/validateDto');
-const dto = require('../dto');
+const controllers = require("../controllers");
+const { protect } = require("../../../middlewares/auth");
+const { authLimiter } = require("../../../middlewares/rateLimiter");
+const validateDto = require("../../../middlewares/validateDto");
+const dto = require("../dto");
 
 // ─── Public Routes ────────────────────────────────────────────────────────────
 
 router.post(
-  '/register',
+  "/register",
   authLimiter,
   validateDto(dto.registerDto),
-  controllers.register
+  controllers.register,
 );
 
 router.post(
-  '/verify-email',
+  "/verify-email",
   authLimiter,
   validateDto(dto.verifyEmailDto),
-  controllers.verifyEmail
+  controllers.verifyEmail,
 );
 
 router.post(
-  '/login',
+  "/login",
   authLimiter,
   validateDto(dto.loginDto),
-  controllers.login
+  controllers.login,
 );
 
-router.post(
-  '/refresh-token',
-  authLimiter,
-  validateDto(dto.refreshTokenDto),
-  controllers.refreshToken
-);
+// Refresh token is read from the httpOnly cookie — no body validation needed
+router.post("/refresh-token", authLimiter, controllers.refreshToken);
 
 router.post(
-  '/forgot-password',
+  "/forgot-password",
   authLimiter,
   validateDto(dto.forgotPasswordDto),
-  controllers.forgotPassword
+  controllers.forgotPassword,
 );
 
 router.post(
-  '/reset-password',
+  "/reset-password",
   authLimiter,
   validateDto(dto.resetPasswordDto),
-  controllers.resetPassword
+  controllers.resetPassword,
 );
 
 // ─── Protected Routes ─────────────────────────────────────────────────────────
 
-router.post(
-  '/logout',
-  protect,
-  controllers.logout
-);
+// Refresh token is read from the httpOnly cookie — no body validation needed
+router.post("/logout", protect, controllers.logout);
 
-router.get(
-  '/me',
-  protect,
-  controllers.getMe
-);
+router.get("/me", protect, controllers.getMe);
 
 router.patch(
-  '/me',
+  "/me",
   protect,
   validateDto(dto.updateMeDto),
-  controllers.updateMe
+  controllers.updateMe,
 );
 
 router.patch(
-  '/change-password',
+  "/change-password",
   protect,
   validateDto(dto.changePasswordDto),
-  controllers.changePassword
+  controllers.changePassword,
 );
 
 module.exports = router;
